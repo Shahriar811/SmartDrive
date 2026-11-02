@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,7 +40,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -102,8 +100,14 @@ fun AccountLinkerScreen(
                                 fontSize = 18.sp,
                                 color = Color.White
                             )
+                            val totalFreeBytes = linkedAccounts.sumOf { it.freeQuotaBytes }
+                            val formattedTotalFree = LinkedDriveAccount.formatBytes(totalFreeBytes)
                             Text(
-                                text = "Merge up to 5 Google Accounts (75 GB Pool)",
+                                text = if (linkedAccounts.isEmpty()) {
+                                    "Merge up to 5 Google Accounts"
+                                } else {
+                                    "$formattedTotalFree Free Available across ${linkedAccounts.size} drive${if (linkedAccounts.size > 1) "s" else ""}"
+                                },
                                 fontSize = 12.sp,
                                 color = Color(0xB3FFFFFF)
                             )
@@ -146,20 +150,34 @@ fun AccountLinkerScreen(
                             .fillMaxWidth()
                             .padding(18.dp)
                     ) {
+                        val totalFreeBytes = linkedAccounts.sumOf { it.freeQuotaBytes }
+                        val totalQuotaBytes = linkedAccounts.sumOf { it.totalQuotaBytes }
+                        val formattedTotalFree = LinkedDriveAccount.formatBytes(totalFreeBytes)
+                        val formattedTotalQuota = LinkedDriveAccount.formatBytes(totalQuotaBytes)
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Column {
+                                Text(
+                                    text = "Connected: ${linkedAccounts.size} / $maxSlots slots",
+                                    color = colors.textPrimary,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                if (linkedAccounts.isNotEmpty()) {
+                                    Text(
+                                        text = "Total Space Available: $formattedTotalFree Free",
+                                        color = AppleTeal,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
                             Text(
-                                text = "Connected: ${linkedAccounts.size} / $maxSlots slots",
-                                color = colors.textPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            val poolGigabytes = linkedAccounts.size * 15
-                            Text(
-                                text = "$poolGigabytes GB / 75 GB",
+                                text = if (linkedAccounts.isEmpty()) "0.0 GB" else "$formattedTotalFree / $formattedTotalQuota",
                                 color = AppleTeal,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
@@ -206,42 +224,6 @@ fun AccountLinkerScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = colors.card),
-                        shape = RoundedCornerShape(16.dp),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = Brush.linearGradient(listOf(colors.cardBorder, colors.cardBorder)))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(AppleTeal.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Link,
-                                    contentDescription = null,
-                                    tint = AppleTeal,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "No API keys required. Tap '+ Add' on any slot to select your Google Account with full Drive aggregation.",
-                                fontSize = 12.sp,
-                                color = colors.textSecondary,
-                                lineHeight = 17.sp
-                            )
-                        }
-                    }
-                }
-
                 // 5 Account Slots
                 items(maxSlots) { slotIndex ->
                     val slotNumber = slotIndex + 1
@@ -369,22 +351,31 @@ fun AccountSlotCard(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Used: ${account.formattedUsedStorage} of 15.0 GB",
+                        text = "${account.formattedUsedStorage} used of ${account.formattedTotalStorage}",
                         color = colors.textSecondary,
-                        fontSize = 11.sp
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
-                    Text(
-                        text = "Free: ${account.formattedFreeStorage}",
-                        color = AppleTeal,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(AppleTeal.copy(alpha = 0.15f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = "${account.formattedFreeStorage} left",
+                            color = AppleTeal,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 LinearProgressIndicator(
                     progress = { account.usageFraction },
@@ -438,11 +429,6 @@ fun AccountSlotCard(
                             color = colors.textPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "+15 GB Virtual Capacity",
-                            color = colors.textSecondary,
-                            fontSize = 12.sp
                         )
                     }
                 }

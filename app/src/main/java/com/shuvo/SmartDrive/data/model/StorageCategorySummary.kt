@@ -36,9 +36,9 @@ data class StorageCategorySummary(
  * Aggregates up to 5 accounts (total 75 GB = 80,530,636,800 bytes).
  */
 data class UnifiedStoragePoolState(
-    val totalQuotaBytes: Long = 75L * 1024L * 1024L * 1024L, // 75 GB
+    val totalQuotaBytes: Long = 0L,
     val usedQuotaBytes: Long = 0L,
-    val maxSingleFileCapacityBytes: Long = 15L * 1024L * 1024L * 1024L,
+    val maxSingleFileCapacityBytes: Long = 0L,
     val connectedAccountCount: Int = 0,
     val categories: List<StorageCategorySummary> = emptyList(),
     val isAnalyzing: Boolean = false,

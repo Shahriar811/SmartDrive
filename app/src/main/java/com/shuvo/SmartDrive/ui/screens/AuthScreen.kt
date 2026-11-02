@@ -82,8 +82,7 @@ import com.shuvo.SmartDrive.ui.viewmodel.MainStorageViewModel
 fun AuthScreen(
     viewModel: MainStorageViewModel,
     onAuthSuccess: () -> Unit,
-    onGoogleSignInClicked: () -> Unit,
-    onBypassLoginClicked: () -> Unit
+    onGoogleSignInClicked: () -> Unit
 ) {
     var isSignUp by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -402,30 +401,6 @@ fun AuthScreen(
                             color = AppleTeal,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = colors.divider.copy(alpha = 0.6f))
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Testing Mode Bypass Button
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.bypassLoginForTesting(onBypassLoginClicked)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = AppleTealSoft),
-                        border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = SolidColor(AppleTeal.copy(alpha = 0.5f)))
-                    ) {
-                        Text(
-                            text = "⚡ Bypass Login (Testing Mode)",
-                            color = AppleTeal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
                         )
                     }
                 }

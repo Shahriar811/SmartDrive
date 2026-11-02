@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 viewModel.onGoogleAccountLinked(linkedAccount)
                 Toast.makeText(
                     this,
-                    "Linked '${linkedAccount.accountEmail}' (+15 GB)",
+                    "Linking '${linkedAccount.accountEmail}'...",
                     Toast.LENGTH_SHORT
                 ).show()
             },
@@ -179,12 +179,11 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val currentUser by viewModel.currentUser.collectAsState()
-    val isGuestMode by viewModel.isGuestMode.collectAsState()
     val linkedAccounts by viewModel.linkedAccounts.collectAsState()
     val allFiles by viewModel.allFiles.collectAsState()
 
     val startDestination = when {
-        currentUser == null && !isGuestMode -> "auth"
+        currentUser == null -> "auth"
         linkedAccounts.isEmpty() -> "account_linker"
         else -> "dashboard"
     }
@@ -207,18 +206,7 @@ fun AppNavigation(
                         }
                     }
                 },
-                onGoogleSignInClicked = onLaunchGoogleSignIn,
-                onBypassLoginClicked = {
-                    if (linkedAccounts.isEmpty()) {
-                        navController.navigate("account_linker") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate("dashboard") {
-                            popUpTo("auth") { inclusive = true }
-                        }
-                    }
-                }
+                onGoogleSignInClicked = onLaunchGoogleSignIn
             )
         }
 

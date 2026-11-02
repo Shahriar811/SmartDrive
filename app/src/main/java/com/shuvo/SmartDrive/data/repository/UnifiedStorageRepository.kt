@@ -65,7 +65,7 @@ class UnifiedStorageRepository(
                             val quota = response.body()!!.storageQuota
                             val user = response.body()!!.user
                             account.copy(
-                                displayName = user?.displayName ?: account.displayName,
+                                displayName = user?.displayName?.ifBlank { account.displayName } ?: account.displayName,
                                 avatarUrl = user?.photoLink ?: account.avatarUrl,
                                 totalQuotaBytes = quota?.limitBytes ?: account.totalQuotaBytes,
                                 usedQuotaBytes = quota?.usageBytes ?: account.usedQuotaBytes,
@@ -83,6 +83,40 @@ class UnifiedStorageRepository(
                 }
             }
             deferreds.awaitAll()
+        }
+    }
+
+    /**
+     * Live quota query for a single newly linked Google Drive account.
+     */
+    suspend fun refreshSingleAccountQuota(
+        account: LinkedDriveAccount
+    ): LinkedDriveAccount = withContext(Dispatchers.IO) {
+        val tokenResult = oAuthManager.getAccessToken(account.accountEmail)
+        if (tokenResult.isFailure) {
+            return@withContext account
+        }
+        val token = tokenResult.getOrNull().orEmpty()
+        try {
+            val response = driveApi.getAbout(authHeader = "Bearer $token")
+            if (response.isSuccessful && response.body() != null) {
+                val quota = response.body()!!.storageQuota
+                val user = response.body()!!.user
+                account.copy(
+                    displayName = user?.displayName?.ifBlank { account.displayName } ?: account.displayName,
+                    avatarUrl = user?.photoLink ?: account.avatarUrl,
+                    totalQuotaBytes = quota?.limitBytes ?: account.totalQuotaBytes,
+                    usedQuotaBytes = quota?.usageBytes ?: account.usedQuotaBytes,
+                    lastSyncTimestamp = System.currentTimeMillis()
+                )
+            } else {
+                if (response.code() == 401) {
+                    oAuthManager.invalidateToken(account.accountEmail)
+                }
+                account
+            }
+        } catch (e: Exception) {
+            account
         }
     }
 

@@ -49,9 +49,6 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
     private val _currentUser = MutableStateFlow<FirebaseUser?>(authRepo.currentUser)
     val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
-    private val _isGuestMode = MutableStateFlow(false)
-    val isGuestMode: StateFlow<Boolean> = _isGuestMode.asStateFlow()
-
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
 
@@ -153,7 +150,7 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
                 _currentUser.value = user
                 if (user != null) {
                     loadUserData(user.uid)
-                } else if (!_isGuestMode.value) {
+                } else {
                     _userProfile.value = null
                     _linkedAccounts.value = emptyList()
                     _allFiles.value = emptyList()
@@ -237,28 +234,9 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun getActiveUserId(): String? {
-        return _currentUser.value?.uid ?: if (_isGuestMode.value) "guest_test_user" else null
-    }
-
-    fun bypassLoginForTesting(onSuccess: () -> Unit) {
-        _isGuestMode.value = true
-        _userProfile.value = UserProfile(
-            uid = "guest_test_user",
-            name = "Tester (Bypass Mode)",
-            email = "test.guest@smartdrive.local",
-            createdAt = System.currentTimeMillis()
-        )
-        val localStored = oAuthManager.getStoredLinkedAccounts()
-        if (localStored.isNotEmpty()) {
-            _linkedAccounts.value = localStored
-            recalculatePool(localStored, _allFiles.value)
-        }
-        onSuccess()
-    }
+    fun getActiveUserId(): String? = _currentUser.value?.uid
 
     fun signOut() {
-        _isGuestMode.value = false
         authRepo.signOut()
         _userProfile.value = null
         _linkedAccounts.value = emptyList()
@@ -294,7 +272,35 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
         recalculatePool(current, _allFiles.value)
-        checkOrRequestDriveAuth(account.accountEmail)
+
+        // Immediately fetch live Drive storage quota for this account
+        viewModelScope.launch(Dispatchers.IO) {
+            val tokenResult = oAuthManager.getAccessToken(account.accountEmail)
+            tokenResult.fold(
+                onSuccess = {
+                    val updated = storageRepo.refreshSingleAccountQuota(account)
+                    val updatedList = _linkedAccounts.value.map {
+                        if (it.accountEmail.equals(updated.accountEmail, ignoreCase = true)) updated else it
+                    }
+                    _linkedAccounts.value = updatedList
+                    oAuthManager.saveLinkedAccounts(updatedList)
+                    recalculatePool(updatedList, _allFiles.value)
+                    if (uid != null) {
+                        authRepo.updateLinkedAccounts(uid, updatedList)
+                        storageRepo.syncAllDrivesToFirestore(uid, updatedList)
+                    }
+                    val freeStr = updated.formattedFreeStorage
+                    _uiMessage.value = "Added ${updated.accountEmail} • $freeStr free left"
+                },
+                onFailure = { error ->
+                    if (error is UserRecoverableAuthException) {
+                        error.intent?.let { intent ->
+                            _recoverableAuthIntent.tryEmit(intent)
+                        }
+                    }
+                }
+            )
+        }
     }
 
     fun checkOrRequestDriveAuth(accountEmail: String) {
@@ -328,6 +334,9 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
                 authRepo.updateLinkedAccounts(uid, refreshed)
                 storageRepo.syncAllDrivesToFirestore(uid, refreshed)
             }
+            val totalFreeBytes = refreshed.sumOf { it.freeQuotaBytes }
+            val formattedFree = LinkedDriveAccount.formatBytes(totalFreeBytes)
+            _uiMessage.value = "Storage updated: $formattedFree available across ${refreshed.size} drives"
         }
     }
 

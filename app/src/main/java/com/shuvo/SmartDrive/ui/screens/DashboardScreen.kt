@@ -524,7 +524,9 @@ fun StorageDonutProgressCard(
     val usedFraction = if (poolState.totalQuotaBytes > 0) {
         (poolState.usedQuotaBytes.toFloat() / poolState.totalQuotaBytes.toFloat()).coerceIn(0f, 1f)
     } else 0f
-    val freeFraction = (1f - usedFraction).coerceIn(0f, 1f)
+    val freeFraction = if (poolState.totalQuotaBytes > 0) {
+        (1f - usedFraction).coerceIn(0f, 1f)
+    } else 0f
 
     val animatedUsedFraction by animateFloatAsState(
         targetValue = usedFraction,
@@ -638,6 +640,15 @@ fun StorageDonutProgressCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Total Pool Stat
+                Text(
+                    text = "Total: ${poolState.formattedTotal} (${poolState.connectedAccountCount} drive${if (poolState.connectedAccountCount != 1) "s" else ""})",
+                    color = Color(0xB3FFFFFF),
+                    fontSize = 11.sp
+                )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
