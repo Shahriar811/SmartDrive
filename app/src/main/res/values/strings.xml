@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SmartDrive</string>
+    <string name="app_tagline">75 GB Unified Cloud Storage</string>
+    <string name="permanent_delete_warning">Permanent Deletion Warning: If you delete this file, it will be permanently erased from your cloud storage and will no longer exist anywhere. It will not go to the Trash and cannot be recovered. Do you want to proceed?</string>
+</resources>

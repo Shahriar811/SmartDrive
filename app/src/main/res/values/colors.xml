@@ -1,0 +1,14 @@
+<resources>
+    <color name="discord_bg">#1E1F22</color>
+    <color name="discord_surface">#2B2D31</color>
+    <color name="discord_card">#313338</color>
+    <color name="discord_blurple">#5865F2</color>
+    <color name="discord_green">#57F287</color>
+    <color name="discord_yellow">#FEE75C</color>
+    <color name="discord_fuchsia">#EB459E</color>
+    <color name="discord_red">#ED4245</color>
+    <color name="discord_cyan">#00A8FC</color>
+    <color name="text_primary">#F2F3F5</color>
+    <color name="text_muted">#949BA4</color>
+</resources>
+
