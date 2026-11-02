@@ -14,10 +14,11 @@ Designed with an elegant **Apple iOS & Oceanic Mint** aesthetic featuring fluid 
 
 ## ✨ Key Features
 
-### 1. 75 GB Unified Virtual Storage Pool
+### 1. 75 GB Unified Virtual Storage Pool & Live Quota Inspection
 - Merges up to 5 distinct Google Drive accounts into one 75 GB storage ecosystem.
-- Live quota queries run in parallel across all connected accounts using Kotlin Coroutines (`async` / `awaitAll`).
-- Visualized with a custom **Circular Storage Donut Gauge** showing Free % and Used % sweep arcs with real-time statistics.
+- **Instant Live Drive Quota Detection:** Queries Google Drive API (`drive/v3/about`) immediately when an account is linked to calculate exact used and remaining free bytes (e.g. `2.0 GB Free Left` out of `15.0 GB`).
+- **Dynamic Pool Aggregation:** Calculates accurate real-time total space available across all connected accounts.
+- **Visualized with a Custom Circular Donut Gauge:** Apple-style gauge displaying real-time Free %, Used %, Total capacity, and per-drive breakdown with smooth animation transitions.
 
 ### 2. Smart Non-Splitting Batch Upload (Bin-Packing Algorithm)
 - **Zero File Splitting:** Files are never fragmented across accounts. If Account 1 has 0.5 GB free and Account 2 has 15 GB free, a 2 GB file is automatically allocated entirely to Account 2.
@@ -98,6 +99,22 @@ com.shuvo.SmartDrive/
    ```bash
    ./gradlew assembleDebug
    ```
+
+---
+
+## 📦 Version History
+
+- **v1.3 (Current)**:
+  - Instant live storage quota inspection on Google Drive account linking.
+  - Per-slot live remaining free storage pill badge (e.g. `2.0 GB left`, `13.0 GB used of 15.0 GB`).
+  - Real-time aggregated "Total Space Available" computation in Account Linker and Dashboard.
+  - Removed demo bypass modes, testing buttons, and placeholder notices for a clean production experience.
+  - New geometric cloud launcher icons with full adaptive icon support.
+- **v1.2**:
+  - Apple iOS Oceanic & Mint theme redesign with 450ms smooth transition Day/Night mode.
+  - Fixed account linking via native Android `AccountManager.newChooseAccountIntent`.
+- **v1.0**:
+  - Initial 75 GB unified storage pool engine with First-Fit-Decreasing batch upload.
 
 ---
 
