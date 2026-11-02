@@ -49,6 +49,9 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
     private val _currentUser = MutableStateFlow<FirebaseUser?>(authRepo.currentUser)
     val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
+    private val _isGuestMode = MutableStateFlow(false)
+    val isGuestMode: StateFlow<Boolean> = _isGuestMode.asStateFlow()
+
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
 
@@ -150,7 +153,7 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
                 _currentUser.value = user
                 if (user != null) {
                     loadUserData(user.uid)
-                } else {
+                } else if (!_isGuestMode.value) {
                     _userProfile.value = null
                     _linkedAccounts.value = emptyList()
                     _allFiles.value = emptyList()
@@ -234,9 +237,28 @@ class MainStorageViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun getActiveUserId(): String? = _currentUser.value?.uid
+    fun getActiveUserId(): String? {
+        return _currentUser.value?.uid ?: if (_isGuestMode.value) "guest_test_user" else null
+    }
+
+    fun bypassLoginForTesting(onSuccess: () -> Unit) {
+        _isGuestMode.value = true
+        _userProfile.value = UserProfile(
+            uid = "guest_test_user",
+            name = "Tester (Bypass Mode)",
+            email = "test.guest@smartdrive.local",
+            createdAt = System.currentTimeMillis()
+        )
+        val localStored = oAuthManager.getStoredLinkedAccounts()
+        if (localStored.isNotEmpty()) {
+            _linkedAccounts.value = localStored
+            recalculatePool(localStored, _allFiles.value)
+        }
+        onSuccess()
+    }
 
     fun signOut() {
+        _isGuestMode.value = false
         authRepo.signOut()
         _userProfile.value = null
         _linkedAccounts.value = emptyList()

@@ -104,11 +104,14 @@ com.shuvo.SmartDrive/
 
 ## 📦 Version History
 
-- **v1.3 (Current)**:
+- **v1.4 (Current)**:
+  - Restored convenient Bypass Login mode on authentication screen for streamlined local and device testing.
+  - Live Drive storage quota inspection with real-time remaining free space pills and dynamic total pool calculation.
+  - Clean Account Linker hub with direct Google Account selection.
+- **v1.3**:
   - Instant live storage quota inspection on Google Drive account linking.
   - Per-slot live remaining free storage pill badge (e.g. `2.0 GB left`, `13.0 GB used of 15.0 GB`).
   - Real-time aggregated "Total Space Available" computation in Account Linker and Dashboard.
-  - Removed demo bypass modes, testing buttons, and placeholder notices for a clean production experience.
   - New geometric cloud launcher icons with full adaptive icon support.
 - **v1.2**:
   - Apple iOS Oceanic & Mint theme redesign with 450ms smooth transition Day/Night mode.
